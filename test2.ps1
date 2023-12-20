@@ -39,3 +39,10 @@ $imeCode = $keyboardLanguageId + ":" + $keyboardLayoutId
 Write-Host "IME-Code: $imeCode"
 #$imeCode = $regionInfo.GeoId.ToString("X4") + ":" + $keyboardLayoutId
 #Write-Host "IME-Code: $imeCode"
+
+Write-Host ("Language: $Language, 
+Region: $GeoID ($Land, $($regionInfo.DisplayName)), 
+Keyboard Language $KeyboardLanguage and Layout $KeyboardLayout : $imeCode 
+ShortDateFormat: $ShortDateFormat, 
+LongDateFormat: $LongDateFormat, 
+DecimalSeperator: $DecimalSeperator")
