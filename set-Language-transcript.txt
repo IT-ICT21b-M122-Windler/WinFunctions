@@ -4242,3 +4242,48 @@ Alias           type -> Get-Content
 Alias           where -> Where-Object
 Alias           wjb -> Wait-Job
 
+PS>git add -A
+]633;E;git add -A]633;D;0]633;A]633;P;Cwd=/Users/nilswindler/Library/CloudStorage/OneDrive-TBZ/Schule ICT/M122/M122-GitPS /Users/nilswindler/Library/CloudStorage/OneDrive-TBZ/Schule ICT/M122/M122-Git> ]633;B
+PS>git commit -m "Worked on Function Set-Language"
+[dev b919715] Worked on Function Set-Language
+ 6 files changed, 10786 insertions(+), 43 deletions(-)
+ create mode 100644 2024-01-17_16-35-54changelanguage.log
+ create mode 100644 2024-01-17_16-37-05changelanguage.log
+ create mode 100644 2024-01-17_16-40-59_function-set-language.log
+ create mode 100644 PowerShellLog.txt
+ create mode 100644 set-Language-transcript.txt
+]633;E;git commit -m "Worked on Function Set-Language"]633;D;0]633;A]633;P;Cwd=/Users/nilswindler/Library/CloudStorage/OneDrive-TBZ/Schule ICT/M122/M122-GitPS /Users/nilswindler/Library/CloudStorage/OneDrive-TBZ/Schule ICT/M122/M122-Git> ]633;B
+PS>git push origin dev
+remote: This repository moved. Please use the new location:
+remote: This repository moved. Please use the new location:        
+remote:   https://github.com/IT-ICT21b-M122-Windler/WinFunctions.git
+remote:   https://github.com/IT-ICT21b-M122-Windler/WinFunctions.git        
+To https://github.com/NilsWindlerM122/M122_WinFunctions_NW
+To https://github.com/NilsWindlerM122/M122_WinFunctions_NW
+   b3f8bfe..b919715  dev -> dev
+   b3f8bfe..b919715  dev -> dev
+]633;E;git push origin dev]633;D;0]633;A]633;P;Cwd=/Users/nilswindler/Library/CloudStorage/OneDrive-TBZ/Schule ICT/M122/M122-GitPS /Users/nilswindler/Library/CloudStorage/OneDrive-TBZ/Schule ICT/M122/M122-Git> ]633;B
+PS>git push origin dev
+Everything up-to-date
+Everything up-to-date
+]633;E;git push origin dev]633;D;0]633;A]633;P;Cwd=/Users/nilswindler/Library/CloudStorage/OneDrive-TBZ/Schule ICT/M122/M122-GitPS /Users/nilswindler/Library/CloudStorage/OneDrive-TBZ/Schule ICT/M122/M122-Git> ]633;B
+PS>git push origin dev
+Everything up-to-date
+Everything up-to-date
+]633;E;git push origin dev]633;D;0]633;A]633;P;Cwd=/Users/nilswindler/Library/CloudStorage/OneDrive-TBZ/Schule ICT/M122/M122-GitPS /Users/nilswindler/Library/CloudStorage/OneDrive-TBZ/Schule ICT/M122/M122-Git> ]633;B
+PS>git git remote set-url origin https://github.com/IT-ICT21b-M122-Windler/WinFunctions
+git: 'git' is not a git command. See 'git --help'.
+git: 'git' is not a git command. See 'git --help'.
+
+
+The most similar command is
+The most similar command is
+	init
+	init
+]633;E;git git remote set-url origin https://github.com/IT-ICT21b-M122-Windler/WinFunctions]633;D;0]633;A]633;P;Cwd=/Users/nilswindler/Library/CloudStorage/OneDrive-TBZ/Schule ICT/M122/M122-GitPS /Users/nilswindler/Library/CloudStorage/OneDrive-TBZ/Schule ICT/M122/M122-Git> ]633;B
+PS>git remote set-url origin https://github.com/IT-ICT21b-M122-Windler/WinFunctions
+]633;E;git remote set-url origin https://github.com/IT-ICT21b-M122-Windler/WinFunctions]633;D;0]633;A]633;P;Cwd=/Users/nilswindler/Library/CloudStorage/OneDrive-TBZ/Schule ICT/M122/M122-GitPS /Users/nilswindler/Library/CloudStorage/OneDrive-TBZ/Schule ICT/M122/M122-Git> ]633;B
+PS>git push origin dev
+Everything up-to-date
+Everything up-to-date
+]633;E;git push origin dev]633;D;0]633;A]633;P;Cwd=/Users/nilswindler/Library/CloudStorage/OneDrive-TBZ/Schule ICT/M122/M122-GitPS /Users/nilswindler/Library/CloudStorage/OneDrive-TBZ/Schule ICT/M122/M122-Git> ]633;B
