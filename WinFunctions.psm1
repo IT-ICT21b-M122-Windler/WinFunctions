@@ -1,33 +1,83 @@
 # This Module is for Windows Function like changing the Language
 
+Function Write-Log {
+    [CmdletBinding()]
+    Param(
+    [Parameter(Mandatory=$True)]
+    [String]$Message,
+
+    [Parameter(Mandatory=$False)]
+    [String]$File
+    )
+
+    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    "$($timestamp): $Message" | Out-File -FilePath $File -Append
+}
 function Set-Language {
     param (
-        [Parameter(Mandatory = $false, HelpMessage = "Set the Region on Windows")]
-        [string]$Land = "Invalid", #Ivalid do while loop
-        [Parameter(Mandatory = $false, HelpMessage = "Set the Reginal Format on Windows (de-CH, en-US etc.)")]
-        [string]$RegionalFormat = "",
+        #Sprache
         [Parameter(Mandatory = $false, HelpMessage = "Set the Language and Format on Windows (de-CH, en-US etc.)")]
-        [string]$Language = "",
+        [string]$DisplayLanguage = "",
 
         [Parameter(Mandatory = $false, HelpMessage = "Set the Keyboard Language on Windows")]
         [string]$KeyboardLanguage = "",
-        [Parameter(Mandatory = $false,
-         HelpMessage = "Set the Keyboard Layout on Windows")]
+        [Parameter(Mandatory = $false, HelpMessage = "Set the Keyboard Layout on Windows")]
         [string]$KeyboardLayout = "",
 
+        #Region
+        [Parameter(Mandatory = $false, HelpMessage = "Set the Region on Windows")]
+        [string]$Region= "Invalid", #Ivalid do while loop
+        [Parameter(Mandatory = $false, HelpMessage = "Set the Reginal Format on Windows (de-CH, en-US etc.)")]
+        [string]$RegionalFormat = "",
+
+        #Format
         [Parameter(Mandatory = $false, HelpMessage = "Set the Time Format on Windows")]
         [ValidateSet("Long dd/MM/yyyy", "Short dd/MM/yy", "USLong yyyy/MM/dd", "USShort yy/MM/dd")]
         $ShortDateFormat = "",
         [Parameter(Mandatory = $false, HelpMessage = "Set the Time Format on Windows")]
         [ValidateSet("Long dd/MM/yyyy", "Short dd/MM/yy", "USLong yyyy/MM/dd", "USShort yy/MM/dd")]
         $LongDateFormat = "",
-
         [Parameter(Mandatory = $false, HelpMessage = "Set the Time Format on Windows")]
         [ValidateSet(".", ",")]
         $DecimalSeperator = ""
-        #etc.
-
+        #etc nach Kundenwunsch...
     )
+
+    # ---------------- Variablen und Module ----------------
+    Import-Module international
+    $RegPath = "HKCU:\Control Panel\International"
+    $ActualDate = Get-Date -Format "yyyy-MM-dd_HH-mm-ss"
+    $Outputpath =  ".\" + "$ActualDate" + "changelanguage.log"
+
+    # Write-Host - Your curent Language settings
+    Write-Host "Your current Language and Format settings"
+    Write-Host "Display Language: $(Get-WinUILanguageOverride).LanguageTag"
+    Write-Host "Keyboard Language: $(Get-WinUserLanguageList).LanguageTag"
+    Write-Host "Keyboard Layout: $(Get-WinUserLanguageList).InputMethodTips"
+    Write-Host "Region: $(Get-WinHomeLocation).GeoId"
+    Write-Host "Regional Format: $(Get-Culture).Name"
+    Write-Host "Time Format short: $(Get-ItemProperty -Path HKCU:\Control Panel\International).sShortDate"
+    Write-Host "Time Format long: $(Get-ItemProperty -Path HKCU:\Control Panel\International).sLongDate"
+    Write-Host "Decimal Seperator: $(Get-ItemProperty -Path HKCU:\Control Panel\International).sDecimal"
+    # Write-Log - Your curent Language settings
+    Write-Log -Message "Your current Language and Format settings" -File $Outputpath
+    Write-Log -Message "Display Language: $(Get-WinUILanguageOverride).LanguageTag" -File $Outputpath
+    Write-Log -Message "Keyboard Language: $(Get-WinUserLanguageList).LanguageTag" -File $Outputpath
+    Write-Log -Message "Keyboard Layout: $(Get-WinUserLanguageList).InputMethodTips" -File $Outputpath
+    Write-Log -Message "Region: $(Get-WinHomeLocation).GeoId" -File $Outputpath
+    Write-Log -Message "Regional Format: $(Get-Culture).Name" -File $Outputpath
+    Write-Log -Message "Time Format short: $(Get-ItemProperty -Path HKCU:\Control Panel\International).sShortDate" -File $Outputpath
+    Write-Log -Message "Time Format long: $(Get-ItemProperty -Path HKCU:\Control Panel\International).sLongDate" -File $Outputpath
+    Write-Log -Message "Decimal Seperator: $(Get-ItemProperty -Path HKCU:\Control Panel\International).sDecimal" -File $Outputpath
+
+
+
+    $CurrentLanguage = Get-WinUILanguageOverride
+    $CurrentLanguage = $CurrentLanguage.LanguageTag
+
+    Write-Host "Set the Language on Windows"
+    Write-Log -Message "Set the Language on Windows" -File $Outputpath
+
     while ($Land -eq "Invalid"){
         $Land = Read-Host "Set Region on Windows, Native Name or English Name"
     }
@@ -140,10 +190,24 @@ function Set-Language {
     Write-Host "ShortDateFormat: $ShortDateFormat"
     Write-Host "LongDateFormat: $LongDateFormat"
     Write-Host "DecimalSeperator: $DecimalSeperator"
-    
-    # ---------------- Variablen und Module ----------------
-    Import-Module international
-    $RegPath = "HKCU:\Control Panel\International"
+
+    # Ausgabe der gefundenen Informationen in eine Log-Datei
+    Write-Log -Message "Your Input" -File $Outputpath
+    Write-Log -Message "Language: $Language" -File $Outputpath
+    Write-Log -Message "Region: $GeoID ($Land, $($regionInfo.DisplayName))" -File $Outputpath
+    Write-Log -Message "Keyboard Language $KeyboardLanguage and Layout $KeyboardLayout : $imeCode" -File $Outputpath
+    Write-Log -Message "ShortDateFormat: $ShortDateFormat" -File $Outputpath
+    Write-Log -Message "LongDateFormat: $LongDateFormat" -File $Outputpath
+    Write-Log -Message "DecimalSeperator: $DecimalSeperator" -File $Outputpath
+
+    $Confirm = Read-Host "Do you want to continue? (y/n)"
+    if ($Confirm -eq "y") {
+        Write-Host "Continue..."
+    }
+    else {
+        Write-Host "Exit..."
+        exit
+    }
 
     # ---------------- Implementierung ----------------
     # Region anpassen
@@ -151,25 +215,26 @@ function Set-Language {
         Write-Host "Changing Region..."
         Set-WinHomeLocation -GeoId $GeoID
     }
-    #Reionales Format anpassen
+    # Reionales Format anpassen
     if ($RegionalFormat -ne "") {
         Write-Host "Changing Regional Format..."
         Set-Culture -CultureInfo $RegionalFormat
     }
-    # Anzeigesprache anpassen
+    
     if ($Language -ne "") {
+        # Anzeigesprache anpassen
         Write-Host "Changing Display Language..."
         Set-WinUILanguageOverride -Language $Language
+        # Bevorzugte Sprache anpassen
+        Write-Host "Changing preferred Language..."
+        $languageList = New-WinUserLanguageList $Language
+        $languageList[0].Handwriting = 0
+        # Tastaturlayout anpassen
+        Write-Host "Changing Keyboard Layout..."
+        $languageList[0].InputMethodTips.Clear()
+        $languageList[0].InputMethodTips.Add($imeCode)
+        Set-WinUserLanguageList $languagelist -Confirm:$false -Force
     }
-    # Bevorzugte Sprache anpassen
-    Write-Host "Changing preferred Language..."
-    $languageList = New-WinUserLanguageList $Language
-    $languageList[0].Handwriting = 0
-    # Tastaturlayout anpassen
-    Write-Host "Changing Keyboard Layout..."
-    $languageList[0].InputMethodTips.Clear()
-    $languageList[0].InputMethodTips.Add($imeCode)
-    Set-WinUserLanguageList $languagelist -Confirm:$false -Force
     # Format anpassen
     Write-Host "Changing Format Settings..."
     $formatKeys = @{
