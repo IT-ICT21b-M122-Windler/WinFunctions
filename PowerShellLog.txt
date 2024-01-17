@@ -6501,3 +6501,15 @@ PS>git push origin dev
 Everything up-to-date
 Everything up-to-date
 ]633;E;git push origin dev]633;D;0]633;A]633;P;Cwd=/Users/nilswindler/Library/CloudStorage/OneDrive-TBZ/Schule ICT/M122/M122-GitPS /Users/nilswindler/Library/CloudStorage/OneDrive-TBZ/Schule ICT/M122/M122-Git> ]633;B
+PS>git add -A
+]633;E;git add -A]633;D;0]633;A]633;P;Cwd=/Users/nilswindler/Library/CloudStorage/OneDrive-TBZ/Schule ICT/M122/M122-GitPS /Users/nilswindler/Library/CloudStorage/OneDrive-TBZ/Schule ICT/M122/M122-Git> ]633;B
+PS>git commit -m "Worked on Function Set-Language"
+[dev d44d995] Worked on Function Set-Language
+ 2 files changed, 90 insertions(+)
+]633;E;git commit -m "Worked on Function Set-Language"]633;D;0]633;A]633;P;Cwd=/Users/nilswindler/Library/CloudStorage/OneDrive-TBZ/Schule ICT/M122/M122-GitPS /Users/nilswindler/Library/CloudStorage/OneDrive-TBZ/Schule ICT/M122/M122-Git> ]633;B
+PS>git push origin dev
+To https://github.com/IT-ICT21b-M122-Windler/WinFunctions
+To https://github.com/IT-ICT21b-M122-Windler/WinFunctions
+   b919715..d44d995  dev -> dev
+   b919715..d44d995  dev -> dev
+]633;E;git push origin dev]633;D;0]633;A]633;P;Cwd=/Users/nilswindler/Library/CloudStorage/OneDrive-TBZ/Schule ICT/M122/M122-GitPS /Users/nilswindler/Library/CloudStorage/OneDrive-TBZ/Schule ICT/M122/M122-Git> ]633;B
