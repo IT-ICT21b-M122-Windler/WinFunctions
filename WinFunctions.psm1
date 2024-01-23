@@ -17,6 +17,7 @@ Function Write-Log {
 function Get-PowerShellIsAdmin {
     # Check if PowerShell is running as Administrator
     $Global:IsAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")
+    $IsAdmin
 }# Check Admin
 function Set-Language {
     param (
@@ -83,7 +84,7 @@ function Set-Language {
     Write-Log -Message "Time Format short: $($intlSettings.sShortDate)" -File $LogOutputpath
     Write-Log -Message "Time Format long: $($intlSettings.sLongDate)" -File $LogOutputpath
     Write-Log -Message "Decimal Separator: $($intlSettings.sDecimal)" -File $LogOutputpath
-    
+
     # ---------------- Start, Getting Input ----------------
     Write-Host "Set the Language on Windows"
     Write-Log -Message "Set the Language on Windows" -File $LogOutputpath
