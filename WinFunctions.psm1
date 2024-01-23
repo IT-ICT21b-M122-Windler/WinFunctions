@@ -13,6 +13,11 @@ Function Write-Log {
     $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
     "$($timestamp): $Message" | Out-File -FilePath $File -Append
 }
+# Check Admin
+function Get-PowerShellIsAdmin {
+    # Check if PowerShell is running as Administrator
+    $Global:IsAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")
+}# Check Admin
 function Set-Language {
     param (
         #Sprache
@@ -44,12 +49,11 @@ function Set-Language {
     )
 
     # ---------------- Protokollierung ----------------
+    $ActualDate = Get-Date -Format "yyyy-MM-dd_HH-mm-ss"
     # Transkript file
-    Start-Transcript -Path ".\set-Language-transcript.txt"
+    Start-Transcript -Path ".\$($ActualDate)set-Language-transcript.txt"
     # Log file
-    $ActualDate = Get-Date -Format "yyyy-MM-dd_HH:mm:ss"
     $LogOutputpath =  ".\" + "$ActualDate" + "_function-set-language.log"
-    Write-Log "Start logging" -File $LogOutputpath
 
     # ---------------- Variablen und Module ----------------
     Import-Module international
@@ -60,25 +64,26 @@ function Set-Language {
     # ---------------- Getting current Informations ----------------
     # Output - Your curent Language settings
     Write-Host "Your current Language and Format settings"
-    Write-Host "Display Language: $(Get-WinUILanguageOverride).LanguageTag"
-    Write-Host "Keyboard Language: $(Get-WinUserLanguageList).LanguageTag"
-    Write-Host "Keyboard Layout: $(Get-WinUserLanguageList).InputMethodTips"
-    Write-Host "Region: $(Get-WinHomeLocation).GeoId"
-    Write-Host "Regional Format: $(Get-Culture).Name"
-    Write-Host "Time Format short: $(Get-ItemProperty -Path HKCU:\Control Panel\International).sShortDate"
-    Write-Host "Time Format long: $(Get-ItemProperty -Path HKCU:\Control Panel\International).sLongDate"
-    Write-Host "Decimal Seperator: $(Get-ItemProperty -Path HKCU:\Control Panel\International).sDecimal"
+    Write-Host "Display Language: $(Get-WinUILanguageOverride.LanguageTag)"
+    Write-Host "Keyboard Language: $(Get-WinUserLanguageList.LanguageTag)"
+    Write-Host "Keyboard Layout: $(Get-WinUserLanguageList.InputMethodTips)"
+    Write-Host "Region: $(Get-WinHomeLocation.GeoId)"
+    Write-Host "Regional Format: $(Get-Culture.Name)"
+    $intlSettings = Get-ItemProperty -Path "HKCU:\Control Panel\International"
+    Write-Host "Time Format short: $($intlSettings.sShortDate)"
+    Write-Host "Time Format long: $($intlSettings.sLongDate)"
+    Write-Host "Decimal Separator: $($intlSettings.sDecimal)"
     # Log - Your curent Language settings
     Write-Log -Message "Your current Language and Format settings" -File $LogOutputpath
-    Write-Log -Message "Display Language: $(Get-WinUILanguageOverride).LanguageTag" -File $LogOutputpath
-    Write-Log -Message "Keyboard Language: $(Get-WinUserLanguageList).LanguageTag" -File $LogOutputpath
-    Write-Log -Message "Keyboard Layout: $(Get-WinUserLanguageList).InputMethodTips" -File $LogOutputpath
-    Write-Log -Message "Region: $(Get-WinHomeLocation).GeoId" -File $LogOutputpath
-    Write-Log -Message "Regional Format: $(Get-Culture).Name" -File $LogOutputpath
-    Write-Log -Message "Time Format short: $(Get-ItemProperty -Path HKCU:\Control Panel\International).sShortDate" -File $LogOutputpath
-    Write-Log -Message "Time Format long: $(Get-ItemProperty -Path HKCU:\Control Panel\International).sLongDate" -File $LogOutputpath
-    Write-Log -Message "Decimal Seperator: $(Get-ItemProperty -Path HKCU:\Control Panel\International).sDecimal" -File $LogOutputpath
-
+    Write-Log -Message "Display Language: $(Get-WinUILanguageOverride.LanguageTag)" -File $LogOutputpath
+    Write-Log -Message "Keyboard Language: $(Get-WinUserLanguageList.LanguageTag)" -File $LogOutputpath
+    Write-Log -Message "Keyboard Layout: $(Get-WinUserLanguageList.InputMethodTips)" -File $LogOutputpath
+    Write-Log -Message "Region: $(Get-WinHomeLocation.GeoId)" -File $LogOutputpath
+    Write-Log -Message "Regional Format: $(Get-Culture.Name)" -File $LogOutputpath
+    Write-Log -Message "Time Format short: $($intlSettings.sShortDate)" -File $LogOutputpath
+    Write-Log -Message "Time Format long: $($intlSettings.sLongDate)" -File $LogOutputpath
+    Write-Log -Message "Decimal Separator: $($intlSettings.sDecimal)" -File $LogOutputpath
+    
     # ---------------- Start, Getting Input ----------------
     Write-Host "Set the Language on Windows"
     Write-Log -Message "Set the Language on Windows" -File $LogOutputpath
@@ -211,9 +216,11 @@ function Set-Language {
     $Confirm = Read-Host "Do you want to continue? (y/n)"
     if ($Confirm -eq "y") {
         Write-Host "Continue..."
+        Write-Log -Message "Continue..." -File $LogOutputpath
     }
     else {
         Write-Host "Exit..."
+        Write-Log -Message "Exit..." -File $LogOutputpath
         exit
     }
 
@@ -258,35 +265,280 @@ function Set-Language {
     # Stoppt die Protokollierung
     Stop-Transcript
 }
-function Set-Taskbar {
+function Get-Startmenu {
     param (
-        $Device = ""
     )
-    If($Device -eq "StandardPC"){
-        #Script
+    # ---------------- Protokollierung ----------------
+    $ActualDate = Get-Date -Format "yyyy-MM-dd_HH-mm-ss"
+    # Transkript file
+    Start-Transcript -Path ".\$($ActualDate)get-Startmenu-transcript.txt"
+    # Log file
+    $LogOutputpath =  ".\" + "$ActualDate" + "_function-get-startmenu.log"
+
+    # ---------------- Getting OS Informations ----------------
+    $os = Get-WmiObject -Class Win32_OperatingSystem
+    # Extract build number and caption version text
+    $build = [int]$os.BuildNumber
+    $caption = $os.Caption
+    # Windows 10 was initially released with build 10240
+    $minBuildForWin10 = 10240
+    # Windows 11 starts from build 22000 (approx)
+    $minBuildForWin11 = 22000
+
+    # ---------------- Start Implement ----------------
+    if ($build -ge $minBuildForWin10 -and $build -lt $minBuildForWin11) {
+    # Windows 10
+            Write-Host "Running Script with Windows Version $caption, Build $build"
+            Write-Log -Message "Running Script with Windows Version $caption, Build $build" -File $LogOutputpath
+            Export-Startlayout -Path ".\Startmenu\layoutModification.xml"
+    } else {
+    # Windows Version not supported
+        Write-Host "This script is intended for Windows 10. Your Windows version $caption, Build $build."
     }
-}
-function Set-Desktop {
-    param (
-        $Device = ""
-    )
-    If($Device -eq "StandardPC"){
-        #Script
-    }
-}
-function Set-Wallpaper {
-    param (
-        $Device = ""
-    )
-    If($Device -eq "StandardPC"){
-        #Script
-    }
+    # Stoppt die Protokollierung
+    Stop-Transcript
 }
 function Set-Startmenu {
     param (
-        $Device = ""
     )
-    If($Device -eq "StandardPC"){
-        #Script
+    # ---------------- Protokollierung ----------------
+    $ActualDate = Get-Date -Format "yyyy-MM-dd_HH-mm-ss"
+    # Transkript file
+    Start-Transcript -Path ".\$($ActualDate)set-Startmenu-transcript.txt"
+    # Log file
+    $LogOutputpath =  ".\" + "$ActualDate" + "_function-set-startmenu.log"
+
+    # ---------------- Getting OS Informations ----------------
+    Write-Host "Getting OS Informations"
+    $os = Get-WmiObject -Class Win32_OperatingSystem
+    # Extract build number and caption version text
+    $build = [int]$os.BuildNumber
+    $caption = $os.Caption
+    # Windows 10 was initially released with build 10240
+    $minBuildForWin10 = 10240
+    # Windows 11 starts from build 22000 (approx)
+    $minBuildForWin11 = 22000
+    # ---------------- Start Implement ----------------
+    if ($build -ge $minBuildForWin10 -and $build -lt $minBuildForWin11) {
+        # Windows 10
+        Write-Host "Your OS is Windows 10, you can use this script"
+        Write-Log -Message "Your OS is Windows 10, you can use this script" -File $LogOutputpath
+        Write-Host "Running Script with Windows Version $caption, Build $build"
+        Write-Log -Message "Running Script with Windows Version $caption, Build $build" -File $LogOutputpath
+
+        # Startmenu Layout
+        Read-Host -Prompt "Do you want to change the set the Startmenu Layout with the file .\Startmenu\LayoutModification.xml? (y/n)"
+        Write-Log -Message "Do you want to change the set the Startmenu Layout with the file .\Startmenu\LayoutModification.xml? (y/n)" -File $LogOutputpath
+        if ($Confirm -eq "y") {
+            Write-Host "Confirmed"
+            Write-Log -Message "Confirmed" -File $LogOutputpath
+            $StartmenuLayoutPath = ".\Startmenu\LayoutModification.xml"
+            $StartmenuLayoutDestinationPath = "$($env:localappdata)\Microsoft\Windows\Shell\"
+
+            Write-Host "Copy .\Startmenu]LayoutModification.xml to %localappdata%\Microsoft\Windows\Shell\"
+            Write-Log -Message "Copy L.\Startmenu\ayoutModification.xml to %localappdata%\Microsoft\Windows\Shell\" -File $LogOutputpath
+            Copy-Item -Path $StartmenuLayoutPath -Destination $StartmenuLayoutDestinationPath
+        
+            Write-Host "Test StartTileGridRegestryPath"
+            Write-Log -Message "Test StartTileGridRegestryPath" -File $LogOutputpath
+            $TestStartTileGridRegestryPath = Test-Path -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\CloudStore\Store\Cache\DefaultAccount\$de${*}$start.tilegrid$windows.data.curatedtilecollection.tilecollection'
+            Write-Host "Path found, remove Item"
+            Write-Log -Message "Path found, remove Item" -File $LogOutputpath
+            if ($TestStartTileGridRegestryPath -eq $true) {
+                try {
+                    Remove-Item -Path 'HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\CloudStore\Store\Cache\DefaultAccount\$de${*}$start.tilegrid$windows.data.curatedtilecollection.tilecollection' -Recurse
+                    Write-Host "Item removed"
+                    Write-Log -Message "Item removed" -File $LogOutputpath
+                }
+                catch { 
+                    Write-Host "Error while removing Item"
+                    Write-Log -Message "Error while removing Item" -File $LogOutputpath
+                }
+            }
+            Stop-Process -Name explorer
+        } else {
+            Write-Host "Startmenu Layout not changed"
+            Write-Log -Message "Startmenu Layout not changed" -File $LogOutputpath
+        }
+    } else {
+    # Windows Version not supported
+        Write-Host "This script is intended for Windows 10. Your Windows version $caption, Build $build."
+        Write-Log -Message "This script is intended for Windows 10. Your Windows version $caption, Build $build." -File $LogOutputpath
+        Write-Host "Startmenu Layout not changed"
+        Write-Log -Message "Startmenu Layout not changed" -File $LogOutputpath
     }
+    #Stoppt die Protokollierung
+    Stop-Transcript
+}
+function Connect-Drive {
+    param (
+        [string]$DrivePath,
+        [string]$DriveVariable,
+        [string]$DriveName,
+        [string]$DriveToDesktop,
+        [string]$DriveToStartmenuFolder
+    )
+    # ---------------- Protokollierung ----------------
+    $ActualDate = Get-Date -Format "yyyy-MM-dd_HH-mm-ss"
+    # Transkript file
+    Start-Transcript -Path ".\$($ActalDate)connect-Drive-transcript.txt"
+    # Log file
+    $LogOutputpath =  ".\" + "$ActualDate" + "_function-connect-drive.log"
+    # ---------------- Getting current Informations ----------------
+    $ConnectedDrives = Get-PSDrive -PSProvider FileSystem
+    Write-Host "Your current connected Drives"
+    Write-Host $ConnectedDrives
+    Write-Log -Message "Your current connected Drives" -File $LogOutputpath
+    Write-Log -Message $ConnectedDrives -File $LogOutputpath
+    # Confirm
+    $Confirm = Read-Host "Do you want to continue? (y/n)"
+    if ($Confirm -eq "y") {
+        Write-Host "Continue..."
+        Write-Log -Message "Continue..." -File $LogOutputpath
+    }
+    else {
+        Write-Host "Exit..."
+        Write-Log -Message "Exit..." -File $LogOutputpath
+        exit
+    }
+    # ---------------- Check Input ----------------
+    if ($DrivePath -eq "") {
+        Read-Host -Prompt "DrivePath is empty, please enter a valid Path"
+        Write-Log -Message "DrivePath is empty, please enter a valid Path" -File $LogOutputpath
+    }
+    if ($DriveVariable -eq "") {
+        Read-Host -Prompt "DriveVariable is empty, please enter a valid Variable"
+        Write-Log -Message "DriveVariable is empty, please enter a valid Variable" -File $LogOutputpath
+    }
+    if ($DriveName -eq "") {
+        Read-Host -Prompt "DriveName is empty, please enter a valid Name"
+        Write-Log -Message "DriveName is empty, please enter a valid Name" -File $LogOutputpath
+    }
+    # ---------------- Start Implement ----------------
+    # Connect Drive
+    if ($DrivePath -ne "") {
+        Write-Host "$HederLine Connect Drive $Drive $HeaderLine"
+        Write-Log -Message "$HeaderLine Connect Drive $Drive $HeaderLine" -File $LogOutputpath
+        New-SmbMapping -LocalPath "$($DriveVariable):" -RemotePath $DrivePath -Persistent $true
+
+        # Create Desktop Shortcut
+        if ($DriveToDesktop -eq "yes") {
+            Write-Host "$HederLine Create Desktop Shortcut $DriveToDesktop $HeaderLine"
+            Write-Log -Message "$HeaderLine Create Desktop Shortcut $DriveToDesktop $HeaderLine" -File $LogOutputpath
+            $WshShell = New-Object -ComObject WScript.Shell
+            $Shortcut = $WshShell.CreateShortcut("$env:USERPROFILE\Desktop\$DriveName.lnk")
+            $Shortcut.TargetPath = "$DriveVariable" + ":"
+            $Shortcut.Save()
+        }
+        # Create Startmenu Shortcut
+        if ($DriveToStartmenuFolder -eq "yes") {
+            Write-Host "$HederLine Create Startmenu Shortcut $DriveToStartmenuFolder $HeaderLine"
+            Write-Log -Message "$HeaderLine Create Startmenu Shortcut $DriveToStartmenuFolder $HeaderLine" -File $LogOutputpath
+            $WshShell = New-Object -ComObject WScript.Shell
+            $Shortcut = $WshShell.CreateShortcut("$env:USERPROFILE\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\$DriveName.lnk")
+            $Shortcut.TargetPath = "$DriveVariable" + ":"
+            $Shortcut.Save()
+        }
+    }
+    # ---------------- Protokollierung ----------------
+    # Stoppt die Protokollierung
+    Stop-Transcript
+}
+function Set-NetAdapter {
+    Param(
+        [Parameter(Mandatory = $false, Position = 5, HelpMessage = "Show All Network Adapters")]
+        [Switch]$Showall
+    )
+    # ---------------- Protokollierung ----------------
+    $ActualDate = Get-Date -Format "yyyy-MM-dd_HH-mm-ss"
+    # Transkript file
+    Start-Transcript -Path ".\$($ActualDate)_set-netadapter-transcript.txt"
+    # Log file
+    $LogOutputpath =  ".\" + "$ActualDate" + "_function-set-netadapter.log"
+
+    # Check if PowerShell is running as Administrator
+    Write-Host "Check if PowerShell is running as Administrator"
+    Write-Log -Message "Check if PowerShell is running as Administrator" -File $LogOutputpath
+    Get-PowerShellIsAdmin
+
+    # ---------------- Start Implement ----------------
+    if ($IsAdmin) {
+    # Get network adapter List
+    Write-Host "Get network adpater List"
+    Write-Log -Message "Get network adpater List" -File $LogOutputpath
+    $NetAdapterList = Get-WMIObject Win32_NetworkAdapterConfiguration
+    if ($Showall){
+        # All Network adapter including Bluetooth etc were shown.
+        Write-Host "This are all network adapters"
+        Write-Log -Message "This are all network adapters" -File $LogOutputpath
+        $NetAdapterListShowAll = Get-WMIObject Win32_NetworkAdapterConfiguration | Select-Object -Property Index, DHCPEnabled, IPAddress, Description | Format-Table
+        $NetAdapterListShowAllString = $NetAdapterListShowAll | Out-String
+        $NetAdapterListShowAll
+        Write-Log -Message $NetAdapterListShowAllString -File $LogOutputpath
+    } else {
+        # Only Network adapters that dosen't include Wan, Kernel, Bluetooth and Virtual Adapter
+        Write-Host "This are the etwork adapters that dosen't include Wan, Kernel, Bluetooth and Virtual Adapter"
+        Write-Log -Message "This are the etwork adapters that dosen't include Wan, Kernel, Bluetooth and Virtual Adapter" -File $LogOutputpath
+        $NetAdapterListFiltered = Get-WMIObject Win32_NetworkAdapterConfiguration | Select-Object -Property Index, DHCPEnabled, IPAddress, Description | Where-Object { ($_.Description -notlike "*Wan*") -and ($_.Description -notlike "*Kernel*") -and ($_.Description -notlike "*Bluetooth*") -and ($_.Description -notlike "*Virtual Adapter*") } | Format-Table
+        $NetAdapterListFilteredString = $NetAdapterListFiltered | Out-String
+        $NetAdapterListFiltered
+        Write-Log -Message $NetAdapterListFilteredString -File $LogOutputpath
+    }
+
+    #Select a Network Adapter (All Network can be selected also the not shown in the bevor shown list)
+    $selectedadapter = Read-Host -Prompt "Select Adapter to change (Index)"
+    Write-Log -Message "Select Adapter to change (Index)" -File $LogOutputpath
+
+    #Show selected Networkadapter
+    Write-Host "This is the selected adapter"
+    Write-Log -Message "This is the selected adapter" -File $LogOutputpath
+    $NetAdapterList[$selectedadapter] | Select-Object -Property Index, DHCPEnabled, IPAddress, Description | Format-Table
+    $NetAdapterListSelectedString = $NetAdapterList[$selectedadapter] | Out-String
+    Write-Log -Message $NetAdapterListSelectedString -File $LogOutputpath
+
+    # Confirm selection
+    $Confirm = Read-Host -Prompt "Do you want to change this network adapter? (y/n)"
+    if ($Confirm -eq "y") {
+        Write-Host "confirmed"
+        Write-Log -Message "confirmed" -File $LogOutputpath
+    } else {
+        Write-Host "Exit..."
+        Write-Log -Message "Exit..." -File $LogOutputpath
+        exit
+    }
+
+    # Set the IP and Subent
+    $selectedip = Read-Host -Prompt "Enter the IP to set, (leave it empty for DHCP)"
+    Write-Log -Message "Enter the IP to set, (leave it empty for DHCP)" -File $LogOutputpath
+    if ($selectedip -eq ""){
+        # Net Adapter is set to DHCP
+        $NetAdapterList[$selectedadapter].EnableDHCP()
+        Write-Host "Net Adapter is set to DHCP"
+        Write-Log -Message "Net Adapter is set to DHCP" -File $LogOutputpath
+    } else {
+        # Net Adapter will be configured Static
+        Write-Host "IP is set to $selectedip"
+        Write-Log -Message "IP is set to $selectedip" -File $LogOutputpath
+        $selectedsubnet = Read-Host -Prompt "Enter the Subnet to set, (leave it empty for 255.255.255.0 (24))"
+        if ($selectedsubnet -eq "") {
+            $selectedsubnet = "255.255.255.0"
+        }
+        Write-Host "Subnet is set to $selectedsubnet"
+        Write-Log -Message "Subnet is set to $selectedsubnet" -File $LogOutputpath
+
+        # Net Adapter is set to Static
+        $NetAdapterList[$selectedadapter].EnableStatic($selectedip, $selectedsubnet)
+        Write-Host "Net Adapter is set to Static (IP: $selectedip, Subnet: $selectedsubnet)"
+        Write-Log -Message "Net Adapter is set to Static (IP: $selectedip, Subnet: $selectedsubnet)" -File $LogOutputpath
+    }
+    # Please wait some time to be changed
+    Write-Host "Please wait some time to be changed, then try to test your networkconnection"
+    Write-Log -Message "Please wait some time to be changed, then try to test your networkconnection" -File $LogOutputpath
+    
+    } else {
+        Write-Host "This script must be run as Administrator"
+        Write-Log -Message "This script must be run as Administrator" -File $LogOutputpath
+    }
+    # Stoppt die Protokollierung
+    Stop-Transcript
 }
