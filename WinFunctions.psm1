@@ -1,60 +1,64 @@
-# This Module is for Windows Function like changing the Language
+# This Module is for Windows Functions like changing the Language
+# Administrative Functions, Write-Log, Get-PowerShellIsAdmin
 
-Function Write-Log {
-    [CmdletBinding()]
-    Param(
-    [Parameter(Mandatory=$True)]
-    [String]$Message,
+# Check if PowerShell is running on Windows
+if ([System.Environment]::OSVersion.Platform -eq "Win32NT") {
+    Write-Host "This Powershell is running on Windows."
+    Write-Host "Importing Module"
+} else {
+    Write-Host "This Powershell is not running on Windows."
+    Write-Host "This script is intended for Windows 10."
+    Write-Host "You can delete this script."
+    Write-Host "With the command Remove-Module WinFunctions"
+    exit
+}# Check if PowerShell is running on Windows
 
-    [Parameter(Mandatory=$False)]
-    [String]$File
-    )
+# Import Module for Administrative Functions
+Import-Module $PSScriptRoot\Administrativ.psm1
 
-    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    "$($timestamp): $Message" | Out-File -FilePath $File -Append
-}
-# Check Admin
-function Get-PowerShellIsAdmin {
-    # Check if PowerShell is running as Administrator
-    $Global:IsAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")
-    $IsAdmin
-}# Check Admin
+# Functions for Windows Functions
 function Set-Language {
     param (
-        #Sprache
-        [Parameter(Mandatory = $false, HelpMessage = "Set the Language and Format on Windows (de-CH, en-US etc.)")]
-        [string]$DisplayLanguage = "Invalid", #Ivalid do while loop
-
-        [Parameter(Mandatory = $false, HelpMessage = "Set the Keyboard Language on Windows")]
-        [string]$KeyboardLanguage = "Invalid", #Ivalid do while loop
-        [Parameter(Mandatory = $false, HelpMessage = "Set the Keyboard Layout on Windows")]
-        [string]$KeyboardLayout = "Invalid", #Ivalid do while loop
-
+        [Parameter(Mandatory = $false, HelpMessage = "Change Language Custom")]
+        [switch]$Custom, # To set all Language and Keyboard Parameters to Invalid
+        [Parameter(Mandatory = $false, HelpMessage = "Change Format Custom")]
+        [switch]$CustomFormat, # To set all Format Parameters to Invalid
         #Region
         [Parameter(Mandatory = $false, HelpMessage = "Set the Region on Windows")]
-        [string]$Region= "Invalid", #Ivalid do while loop
+        [string]$Region= "Invalid", #Custom do while loop, Native Name or English Name
         [Parameter(Mandatory = $false, HelpMessage = "Set the Reginal Format on Windows (de-CH, en-US etc.)")]
-        [string]$RegionalFormat = "Invalid", #Ivalid do while loop
+        [string]$RegionalFormat = "Invalid", #Custom do while loop, de-CH, en-US etc.
+
+        #Sprache
+        [Parameter(Mandatory = $false, HelpMessage = "Set the Language Override Windows (de-CH, en-US etc.)")]
+        [string]$DisplayLanguage = "Invalid", #Custom do while loop, de-CH, en-US etc.
+        [Parameter(Mandatory = $false, HelpMessage = "Set the Prefered Language Windows (de-CH, en-US etc.)")]
+        [string]$Language = "Invalid", #Custom do while loop, de-CH, en-US etc.
+
+        [Parameter(Mandatory = $false, HelpMessage = "Set the Keyboard Language on Windows (de-CH, en-US etc.)")]
+        [string]$KeyboardLanguage = "Invalid", #Custom do while loop, de-CH, en-US etc.
+        [Parameter(Mandatory = $false, HelpMessage = "Set the Keyboard Layout on Windows (de-CH, en-US etc.)")]
+        [string]$KeyboardLayout = "Invalid", #Custom do while loop, de-CH, en-US etc.
 
         #Format
         [Parameter(Mandatory = $false, HelpMessage = "Set the Time Format on Windows")]
-        [ValidateSet("Long dd/MM/yyyy", "Short dd/MM/yy", "USLong yyyy/MM/dd", "USShort yy/MM/dd")]
-        $ShortDateFormat = "Invalid", #Ivalid do while loop
+        [ValidateSet("Long", "Short", "USLong", "USShort")]
+        $ShortDate = "Invalid", #Custom do while loop, Long dd/MM/yyyy, Short dd/MM/yy, USLong yyyy/MM/dd, USShort yy/MM/dd
         [Parameter(Mandatory = $false, HelpMessage = "Set the Time Format on Windows")]
-        [ValidateSet("Long dd/MM/yyyy", "Short dd/MM/yy", "USLong yyyy/MM/dd", "USShort yy/MM/dd")]
-        $LongDateFormat = "Invalid", #Ivalid do while loop
+        [ValidateSet("Long", "Short", "USLong", "USShort")]
+        $LongDate = "Invalid", #Custom do while loop, Long dd/MM/yyyy, Short dd/MM/yy, USLong yyyy/MM/dd, USShort yy/MM/dd
         [Parameter(Mandatory = $false, HelpMessage = "Set the Time Format on Windows")]
-        [ValidateSet(".", ",")]
-        $DecimalSeperator = "Invalid" #Ivalid do while loop
+        [ValidateSet(".", ",", "Invalid", " ", "Custom")]
+        $DecimalSeparator =  "Invalid" #Custom do while loop, . or ,
         #etc nach Kundenwunsch...
     )
 
     # ---------------- Protokollierung ----------------
     $ActualDate = Get-Date -Format "yyyy-MM-dd_HH-mm-ss"
     # Transkript file
-    Start-Transcript -Path ".\$($ActualDate)set-Language-transcript.txt"
+    Start-Transcript -Path "$PSScriptRoot\logging\transcripts\$($ActualDate)set-Language-transcript.txt"
     # Log file
-    $LogOutputpath =  ".\" + "$ActualDate" + "_function-set-language.log"
+    $LogOutputpath =  "$PSScriptRoot\logging\logs\function-set-language.log"
 
     # ---------------- Variablen und Module ----------------
     Import-Module international
@@ -64,68 +68,96 @@ function Set-Language {
 
     # ---------------- Getting current Informations ----------------
     # Output - Your curent Language settings
+    # Region
     Write-Host "Your current Language and Format settings"
-    Write-Host "Display Language: $(Get-WinUILanguageOverride.LanguageTag)"
-    Write-Host "Keyboard Language: $(Get-WinUserLanguageList.LanguageTag)"
-    Write-Host "Keyboard Layout: $(Get-WinUserLanguageList.InputMethodTips)"
-    Write-Host "Region: $(Get-WinHomeLocation.GeoId)"
-    Write-Host "Regional Format: $(Get-Culture.Name)"
+    $CurrentRegion = Get-WinHomeLocation
+    Write-Host "Region: $($CurrentRegion.HomeLocation) $($CurrentRegion.GeoID) " # Region
+    Write-Host "Regional Format: $(Get-Culture)" # Regional Format
+    # Language
+    $CurrentDisplayLanguage = Get-WinUILanguageOverride # Display Language
+    Write-Host "Display Language: $($CurrentDisplayLanguage.Name)" # Display Language
+    $CurrentLanguage = Get-WinUserLanguageList # Language
+    Write-Host "Current Language: $($CurrentLanguage[0].LanguageTag)" # Language
+    Write-Host "Current Keyboard: $($CurrentLanguage[0].InputMethodTips)" # Keyboard Layout
+    # Format
     $intlSettings = Get-ItemProperty -Path "HKCU:\Control Panel\International"
-    Write-Host "Time Format short: $($intlSettings.sShortDate)"
-    Write-Host "Time Format long: $($intlSettings.sLongDate)"
+    Write-Host "Date Format short: $($intlSettings.sShortDate)"
+    Write-Host "Date Format long: $($intlSettings.sLongDate)"
     Write-Host "Decimal Separator: $($intlSettings.sDecimal)"
     # Log - Your curent Language settings
     Write-Log -Message "Your current Language and Format settings" -File $LogOutputpath
-    Write-Log -Message "Display Language: $(Get-WinUILanguageOverride.LanguageTag)" -File $LogOutputpath
-    Write-Log -Message "Keyboard Language: $(Get-WinUserLanguageList.LanguageTag)" -File $LogOutputpath
-    Write-Log -Message "Keyboard Layout: $(Get-WinUserLanguageList.InputMethodTips)" -File $LogOutputpath
-    Write-Log -Message "Region: $(Get-WinHomeLocation.GeoId)" -File $LogOutputpath
-    Write-Log -Message "Regional Format: $(Get-Culture.Name)" -File $LogOutputpath
-    Write-Log -Message "Time Format short: $($intlSettings.sShortDate)" -File $LogOutputpath
-    Write-Log -Message "Time Format long: $($intlSettings.sLongDate)" -File $LogOutputpath
+    Write-Log -Message "Region: $(Get-WinHomeLocation)" -File $LogOutputpath
+    Write-Log -Message "Regional Format: $(Get-Culture)" -File $LogOutputpath
+    Write-Log -Message "Display Language: $($CurrentDisplayLanguage.Name)" -File $LogOutputpath
+    Write-Log -Message "Current Language: $($CurrentLanguage[0].LanguageTag)" -File $LogOutputpath
+    Write-Log -Message "Current Keyboard: $($CurrentLanguage[0].InputMethodTips)" -File $LogOutputpath
+    Write-Log -Message "Date Format short: $($intlSettings.sShortDate)" -File $LogOutputpath
+    Write-Log -Message "Date Format long: $($intlSettings.sLongDate)" -File $LogOutputpath
     Write-Log -Message "Decimal Separator: $($intlSettings.sDecimal)" -File $LogOutputpath
 
-    # ---------------- Start, Getting Input ----------------
+    # ---------------- Check Parameters ----------------
     Write-Host "Set the Language on Windows"
     Write-Log -Message "Set the Language on Windows" -File $LogOutputpath
 
-    while ($DisplayLanguage -eq "Invalid"){
-        $DisplayLanguage = Read-Host "Set the Language on Windows, Format: de-CH, en-US etc."
+    # Check if Custom is set
+    if ($Custom) {
+        $Region = "Custom"
+        $RegionalFormat = "Custom"
+        $DisplayLanguage = "Custom"
+        $Language = "Custom"
+        $KeyboardLanguage = "Custom"
+        $KeyboardLayout = "Custom"
     }
-    while ($KeyboardLanguage -eq "Invalid"){
-        $KeyboardLanguage = Read-Host "Set Keyboard Language on Windows, Format: Deutsch (Schweiz) or English (United States)"
+    # Check if CustomFormat is set
+    if ($CustomFormat) {
+        $ShortDateFormat = "Custom"
+        $LongDateFormat = "Custom"
+        $DecimalSeparator = "Custom"
     }
-    while ($KeyboardLayout -eq "Invalid"){
-        $KeyboardLayout = Read-Host "Set Keyboard Layout on Windows, Format: Deutsch (Schweiz) or English (United States)"
-    }
-    while ($Region -eq "Invalid"){
+
+    while ($Region -eq "Custom"){
         $Region = Read-Host "Set Region on Windows, Native Name or English Name"
     }
-    while ($RegionalFormat -eq "Invalid"){
+    while ($RegionalFormat -eq "Custom"){
         $RegionalFormat = Read-Host "Set Regional Format on Windows, Format: de-CH, en-US etc."
     }
-    while ($ShortDateFormat -eq "Invalid"){
+    while ($DisplayLanguage -eq "Custom"){
+        $DisplayLanguage = Read-Host "Set the Language Override Windows, Format: de-CH, en-US etc."
+    }
+    while ($Language -eq "Custom"){
+        $Language = Read-Host "Set the Prefered Language on Windows, Format: de-CH, en-US etc."
+    }
+    while ($KeyboardLanguage -eq "Custom"){
+        $KeyboardLanguage = Read-Host "Set Keyboard Language on Windows, Format: de-CH, en-US etc."
+    }
+    while ($KeyboardLayout -eq "Custom"){
+        $KeyboardLayout = Read-Host "Set Keyboard Layout on Windows, Format: de-CH, en-US etc."
+    }
+    while ($ShortDate -eq "Custom"){
         $ShortDateFormat = Read-Host "Set Short Date Format on Windows, Format: Short dd/MM/yy"
     }
-    while ($LongDateFormat -eq "Invalid"){
+    while ($LongDate -eq "Custom"){
         $LongDateFormat = Read-Host "Set Short Date Format on Windows, Format: Long dd/MM/yyyy"
     }
-    while ($DecimalSeperator -eq "Invalid"){
-        $DecimalSeperator = Read-Host "Set Decimal Seperator on Windows, Format: . or ,"
+    while ($DecimalSeparator -eq "Custom"){
+        $DecimalSeparator = Read-Host "Set Decimal Seperator on Windows, Format: . or ,"
     }
 
     # ---------------- Find GeoID ----------------
-    if ($Region -ne "") {
-        $FindGeoID = "false"
-        while ($FindGeoID -eq "false"){
+    function FindGeoID {
+        param (
+            [string]$Region
+        )
+        $FoundGeoID = "false"
+        while ($FoundGeoID -eq "false"){
             Write-Host "Searching GeoID..."
-            Wrtite-log -Message "Searching GeoID..." -File $LogOutputpath
+            Write-log -Message "Searching GeoID..." -File $LogOutputpath
             # Zugriff auf die CultureInfo-Klasse des .NET Frameworks, um alle Kulturen zu erhalten
             $cultures = [System.Globalization.CultureInfo]::GetCultures([System.Globalization.CultureTypes]::AllCultures)
             foreach ($culture in $cultures) { # Durchsuche alle Kulturen, um die entsprechende zu finden
                 try {
                     $RegionInfos = New-Object System.Globalization.RegionInfo($culture.Name)
-                    if ($RegionInfos.EnglishName -eq $Land -or $RegionInfos.NativeName -eq $Land) {
+                    if ($RegionInfos.EnglishName -eq $Region -or $RegionInfos.NativeName -eq $Region) {
                         $landCode = $RegionInfos.TwoLetterISORegionName
                         break
                     }
@@ -138,88 +170,94 @@ function Set-Language {
                 # Erstelle ein RegionInfo-Objekt für den gefundenen Ländercode und speichere diesen in $GeoID
                 $regionInfo = New-Object System.Globalization.RegionInfo $landCode
                 $GeoID = $regionInfo.GeoId
+                Write-Output $GeoID
                 Write-Host "$($Region): GeoID ist $GeoID"
                 Write-Log -Message "$($Region): GeoID ist $GeoID" -File $LogOutputpath
-                $FindGeoID = "true"
-            }
-            else { # Falls kein Ländercode gefunden wurde, gib eine Fehlermeldung aus
-                Write-Host "$($Land): Keine GeoID gefunden"
-                Write-Log -Message "$($Land): Keine GeoID gefunden" -File $LogOutputpath
-                $Land = Read-Host "Set Region on Windows, Native Name or English Name"
-                $FindGeoID = "false"
+                $FoundGeoID = "true"
+            } else { # Falls kein Ländercode gefunden wurde, gib eine Fehlermeldung aus
+                Write-Host "$($Region): Keine GeoID gefunden"
+                Write-Log -Message "$($Region): Keine GeoID gefunden" -File $LogOutputpath
+                $Region = Read-Host "Set Region on Windows, Native Name or English Name"
+                $FoundGeoID = "false"
             }
         }
     }
-    # ---------------- Find Keyboard LCID ----------------
-    if (($KeyboardLanguage -ne "") -or ($KeyboardLayout -ne "")) {
-        $FindKeyboardLCID = "false"
-        while ($FindKeyboardLCID -eq "false"){
+    if ($Region -ne "Invalid") {
+        $GeoID = FindGeoID -Region $Region
+    }
+    # ---------------- Find Keyboard imeCode ----------------
+    function FindKeyboardimeCode {
+        param (
+            [string]$KeyboardLanguage,
+            [string]$KeyboardLayout
+        )
+        $FoundKeyboardimeCode = "false"
+        while ($FoundKeyboardimeCode -eq "false"){
             Write-Host "Searching Keyboard LCID/imeCode..."
+            Write-Log -Message "Searching Keyboard LCID/imeCode..." -File $LogOutputpath
             # Ermittle den passenden Culture-Code für die Sprache und das Layout
-            $keyboardLanguageCultureCode = [System.Globalization.CultureInfo]::GetCultures([System.Globalization.CultureTypes]::AllCultures) | Where-Object { $_.EnglishName -eq $KeyboardLanguage -or $_.NativeName -eq $KeyboardLanguage } |
-            Select-Object -ExpandProperty Name -First 1
-            if ($keyboardLanguageCultureCode) { # Überprüfe, ob ein KeyboardLanguage CultureCode gefunden wurde
-                $cultureInfo = New-Object System.Globalization.CultureInfo $keyboardLanguageCultureCode
-                # Ermittle die KeyboardLanguageId und Zeige die KeyboardLanguageId an
-                $keyboardLanguageId = "0" + $cultureInfo.KeyboardLayoutId.ToString("X")
-                $FindKeyboardLanguageLCID = "true"
+            $KeyboardLanguageObject = [System.Globalization.CultureInfo]::GetCultures([System.Globalization.CultureTypes]::AllCultures) | Where-Object { $_.Name -eq $KeyboardLanguage }
+            $KeyboardLanguageObjectName = $KeyboardLanguageObject.Name
+            if ($KeyboardLanguageObjectName) { # Überprüfe, ob ein KeyboardLanguage CultureCode gefunden wurde
+                $keyboardLanguageId = "0" + $KeyboardLanguageObject.KeyboardLayoutId.ToString("X")
+                $FoundKeyboardLanguageId = "true"
+            } else {
+                Write-Host "Kein imeCode für die Keyboard Sprache $KeyboardLanguage gefunden"
+                $KeyboardLanguage = Read-Host "Set Keyboard Language on Windows, Format: de-CH, en-US etc."
+                $FoundKeyboardLanguageId = "false"
             }
-            else {
-                Write-Host "Kein LCID/imeCode für die Keyboard Sprache $KeyboardLanguage gefunde"
-                $FindKeyboardLCID = "false"
-                $KeyboardLanguage = Read-Host "Set Keyboard Language on Windows, Format: Deutsch (Schweiz) or English (United States)"
-                $FindKeyboardLanguageLCID = "false"
+            $KeyboardLayoutObject = [System.Globalization.CultureInfo]::GetCultures([System.Globalization.CultureTypes]::AllCultures) | Where-Object { $_.Name -eq $KeyboardLayout }
+            $KeyboardLayoutObjectName = $KeyboardLayoutObject.Name
+            if ($KeyboardLayoutObjectName) { # Überprüfe, ob ein KeyboardLayout CultureCode gefunden wurde
+                $keyboardLayoutId = "0000" + $KeyboardLayoutObject.KeyboardLayoutId.ToString("X")
+                $FoundKeyboardLayoutId = "true"
+            } else {
+                Write-Host "Kein LDIC/imeCode für das Keyborad Layout $KeyboardLayout gefunden"
+                $KeyboardLayout = Read-Host "Set Keyboard Layout on Windows, Format: de-CH, en-US etc."
+                $FoundKeyboardLayoutId = "false"
             }
-            $keyboardLayoutCultureCode = [System.Globalization.CultureInfo]::GetCultures([System.Globalization.CultureTypes]::AllCultures) | Where-Object { $_.EnglishName -eq $KeyboardLayout -or $_.NativeName -eq $KeyboardLayout } |
-            Select-Object -ExpandProperty Name -First 1
-            if ($keyboardLayoutCultureCode) { # Überprüfe, ob ein KeyboardLayout CultureCode gefunden wurde
-                $cultureInfo = New-Object System.Globalization.CultureInfo $keyboardLayoutCultureCode
-                # Ermittle die KeyboardLayoutId und Zeige die KeyboardLayoutId an
-                $keyboardLayoutId = "0000" + $cultureInfo.KeyboardLayoutId.ToString("X")
-                $FindKeyboardLayoutLCID = "true"
-            }
-            else {
-                Write-Host "Kein LDIC/imeCode für das Keyborad Layout $KeyboardLayout gefunde"
-                $KeyboardLayout = Read-Host "Set Keyboard Layout on Windows, Format: Deutsch (Schweiz) or English (United States)"
-                $FindKeyboardLayoutLCID = "false"
-            }
-            if (($FindKeyboardLanguageLCID -eq "true") -and ($FindKeyboardLayoutLCID -eq "true")){
+            if (($FoundKeyboardLanguageId -eq "true") -and ($FoundKeyboardLayoutId -eq "true")){
                 $imeCode = $keyboardLanguageId + ":" + $keyboardLayoutId
-                Write-Host "Found Keyboard LCID, imeCode is $imeCode"
-                #$imeCode = $regionInfo.GeoId.ToString("X4") + ":" + $keyboardLayoutId
-                $FindKeyboardLCID = "true"
-            }
-            else {
-                $FindKeyboardLCID = "false"
+                Write-Output $imeCode
+                Write-Host "Found Keyboard imeCode: $imeCode"
+                Write-Log -Message "Found Keyboard imeCode: $imeCode" -File $LogOutputpath
+                $FoundKeyboardimeCode = "true"
+            } else {
+                $FoundKeyboardimeCode = "false"
             }
         }
+    }
+    if (($KeyboardLanguage -ne "Invalid") -or ($KeyboardLayout -ne "Invalid")) {
+        $imeCode = FindKeyboardimeCode -KeyboardLanguage $KeyboardLanguage -KeyboardLayout $KeyboardLayout
     }
 
     # ---------------- Bestätigung ----------------
     # Ausgabe der gefundenen Informationen
     Write-Host "Your Input:"
+    Write-Host "Region: $GeoID ($Region)"
+    Write-Host "Regional Format: $RegionalFormat"
+    Write-Host "Display Language: $DisplayLanguage"
     Write-Host "Language: $Language"
-    Write-Host "Region: $GeoID ($Land, $($regionInfo.DisplayName))"
-    Write-Host "Keyboard Language $KeyboardLanguage and Layout $KeyboardLayout : $imeCode"
+    Write-Host "Keyboard: $imeCode"
     Write-Host "ShortDateFormat: $ShortDateFormat"
     Write-Host "LongDateFormat: $LongDateFormat"
-    Write-Host "DecimalSeperator: $DecimalSeperator"
-
-    # Ausgabe der gefundenen Informationen in eine Log-Datei
+    Write-Host "DecimalSeparator: $DecimalSeparator"
+    # Log - Your Input
     Write-Log -Message "Your Input" -File $LogOutputpath
+    Write-Log -Message "Region: $GeoID ($Region)" -File $LogOutputpath
+    Write-Log -Message "Regional Format: $RegionalFormat" -File $LogOutputpath
+    Write-Log -Message "Display Language: $DisplayLanguage" -File $LogOutputpath
     Write-Log -Message "Language: $Language" -File $LogOutputpath
-    Write-Log -Message "Region: $GeoID ($Land, $($regionInfo.DisplayName))" -File $LogOutputpath
-    Write-Log -Message "Keyboard Language $KeyboardLanguage and Layout $KeyboardLayout : $imeCode" -File $LogOutputpath
-    Write-Log -Message "ShortDateFormat: $ShortDateFormat" -File $LogOutputpath
-    Write-Log -Message "LongDateFormat: $LongDateFormat" -File $LogOutputpath
-    Write-Log -Message "DecimalSeperator: $DecimalSeperator" -File $LogOutputpath
-
+    Write-Log -Message "Keyboard: $imeCode" -File $LogOutputpath
+    Write-Log -Message "ShortDateFormat: $ShortDate" -File $LogOutputpath
+    Write-Log -Message "LongDateFormat: $LongDate" -File $LogOutputpath
+    Write-Log -Message "DecimalSeparator: $DecimalSeparator" -File $LogOutputpath
+    # Confirm
     $Confirm = Read-Host "Do you want to continue? (y/n)"
     if ($Confirm -eq "y") {
         Write-Host "Continue..."
         Write-Log -Message "Continue..." -File $LogOutputpath
-    }
-    else {
+    } else {
         Write-Host "Exit..."
         Write-Log -Message "Exit..." -File $LogOutputpath
         exit
@@ -227,100 +265,184 @@ function Set-Language {
 
     # ---------------- Implementierung ----------------
     # Region anpassen
-    if ($GeoID -ne "") {
+    if (($Region -ne "Invalid") -and ($GeoID -ne "")) {
         Write-Host "Changing Region..."
+        Write-Log -Message "Changing Region..." -File $LogOutputpath
         Set-WinHomeLocation -GeoId $GeoID
     }
     # Reionales Format anpassen
-    if ($RegionalFormat -ne "") {
+    if ($RegionalFormat -ne "Invalid") {
         Write-Host "Changing Regional Format..."
+        Write-Log -Message "Changing Regional Format..." -File $LogOutputpath
         Set-Culture -CultureInfo $RegionalFormat
     }
-    
-    if ($Language -ne "") {
+    # Anzeigesprache anpassen
+    if ($DisplayLanguage -ne "Invalid") {
+        # Prüfen ob die Sprache bereits installiert ist
+        Write-Host "Checking if Language is installed..."
+        Write-Log -Message "Checking if Language is installed..." -File $LogOutputpath
+
+        $DisplayLanguageInstalled = Get-InstalledLanguage -Language $DisplayLanguage
+        if ($DisplayLanguageInstalled -eq $null) {
+            Write-Host "Display Language $DisplayLanguage is not installed"
+            Write-Log -Message "Display Language $DisplayLanguage is not installed" -File $LogOutputpath
+            Install-Language -Language $DisplayLanguage
+        } else {
+            Write-Host "Display Language $DisplayLanguage is installed"
+            Write-Log -Message "Display Language $DisplayLanguage is installed" -File $LogOutputpath
+        }
         # Anzeigesprache anpassen
         Write-Host "Changing Display Language..."
-        Set-WinUILanguageOverride -Language $Language
+        Write-Log -Message "Changing Display Language..." -File $LogOutputpath
+        Set-WinUILanguageOverride -Language $DisplayLanguage
+    }
+    # Sprache anpassen
+    if ($Language -ne "Invalid") {
+        # Prüfen ob die Sprache bereits installiert ist
+        Write-Host "Checking if Language is installed..."
+        Write-Log -Message "Checking if Language is installed..." -File $LogOutputpath
+
+        $LanguageInstalled = Get-InstalledLanguage -Language $Language
+        if ($LanguageInstalled -eq $null) {
+            Write-Host "Language $Language is not installed"
+            Write-Log -Message "Language $Language is not installed" -File $LogOutputpath
+            Install-Language -Language $Language
+        } else {
+            Write-Host "Language $Language is installed"
+            Write-Log -Message "Language $Language is installed" -File $LogOutputpath
+        }
         # Bevorzugte Sprache anpassen
         Write-Host "Changing preferred Language..."
         $languageList = New-WinUserLanguageList $Language
         $languageList[0].Handwriting = 0
+        Set-WinUserLanguageList $languagelist -Confirm:$false -Force
+    }
+    # Tastaturlayout anpassen
+    if (($KeyboardLanguage -ne "Invalid") -and ($KeyboardLayout -ne "Invalid") -and ($imeCode -ne "")) {
+        # Prüfen ob die Sprache bereits installiert ist
+        Write-Host "Checking if Keyboard Language is installed..."
+        Write-Log -Message "Checking if Keyboard Language is installed..." -File $LogOutputpath
+
+        $KeyboardLanguageInstalled = Get-InstalledLanguage -Language $KeyboardLanguage
+        if ($KeyboardLanguageInstalled -eq $null) {
+            Write-Host "Keyboard Language $KeyboardLanguage is not installed"
+            Write-Log -Message "Keyboard Language $KeyboardLanguage is not installed" -File $LogOutputpath
+            Install-Language -Language $KeyboardLanguage
+        } else {
+            Write-Host "Keyboard Language $KeyboardLanguage is installed"
+            Write-Log -Message "Keyboard Language $KeyboardLanguage is installed" -File $LogOutputpath
+        }
         # Tastaturlayout anpassen
         Write-Host "Changing Keyboard Layout..."
+        $languageList = Get-WinUserLanguageList
         $languageList[0].InputMethodTips.Clear()
         $languageList[0].InputMethodTips.Add($imeCode)
+        Set-WinDefaultInputMethodOverride -InputTip $imeCode
         Set-WinUserLanguageList $languagelist -Confirm:$false -Force
     }
     # Format anpassen
-    Write-Host "Changing Format Settings..."
-    $formatKeys = @{
-        sDecimal = $DecimalSeperator
-        sShortDate = $ShortDateFormat
-        sLongDate = $LongDateFormat
-    }
-    $formatKeys.keys | ForEach-Object {
-        Set-ItemProperty -Path $RegPath -Name $_ -Value $formatKeys[$_]
+    if (($ShortDate -ne "Invalid") -or ($LongDate -ne "Invalid") -or ($DecimalSeparator -ne "Invalid")) {
+        if ($ShortDate -ne "Invalid") {
+            $ShortDateFormat = $ShortDate.Replace("Long", "dd.MM.yyyy")
+            $ShortDateFormat = $ShortDateFormat.Replace("Short", "dd.MM.yy")
+            $ShortDateFormat = $ShortDateFormat.Replace("USLong", "yyyy/MM/dd")
+            $ShortDateFormat = $ShortDateFormat.Replace("USShort", "yy/MM/dd")
+
+            $formatKeys += @{
+                sShortDate = $ShortDateFormat
+            }
+        }
+        if ($LongDate -ne  "Invalid") {
+            $LongDateFormat = $LongDate.Replace("Long", "dddd, dd. MMMM yyyy")
+            $LongDateFormat = $LongDateFormat.Replace("Short", "dd.MM.yy")
+            $LongDateFormat = $LongDateFormat.Replace("USLong", "dddd, MMMM dd, yyyy")
+            $LongDateFormat = $LongDateFormat.Replace("USShort", "yy/MM/dd")
+
+            $formatKeys += @{
+                sLongDate = $LongDateFormat
+            }
+        }
+        if ($DecimalSeparator -ne "Invalid") {
+            $formatKeys += @{
+                sDecimal = $DecimalSeparator
+            }
+        }
+        # Format anpassen
+        Write-Host "Changing Format Settings..."
+        Write-Log -Message "Changing Format Settings..." -File $LogOutputpath
+        $formatKeys.keys | ForEach-Object {
+            Set-ItemProperty -Path $RegPath -Name $_ -Value $formatKeys[$_]
+        }
     }
     Write-Host "`nSuccessfully changed the language settings!"
-
+    Write-Log -Message "`nSuccessfully changed the language settings!" -File $LogOutputpath
+    Write-Host "Please restart your computer to apply the changes."
+    Write-Log -Message "Please restart your computer to apply the changes." -File $LogOutputpath
     # Stoppt die Protokollierung
+    Write-Host "Stop Logging"
+    Write-Log -Message "Stop Logging" -File $LogOutputpath
     Stop-Transcript
-}
+
+    $Restart = Read-Host "Do you want to restart your computer now? (y/n)"
+    if ($Restart -eq "y") {
+        Restart-Computer
+    }
+    else {
+        Write-Host "Please restart your computer to apply the changes."
+        Read-Host "Press any key to stop the script..."
+    }
+    
+}# Set-Language, Change the Language and Format on Windows
 function Get-Startmenu {
     param (
     )
     # ---------------- Protokollierung ----------------
     $ActualDate = Get-Date -Format "yyyy-MM-dd_HH-mm-ss"
     # Transkript file
-    Start-Transcript -Path ".\$($ActualDate)get-Startmenu-transcript.txt"
+    Start-Transcript -Path "$PSScriptRoot\logging\transcripts\$($ActualDate)get-Startmenu-transcript.txt"
     # Log file
-    $LogOutputpath =  ".\" + "$ActualDate" + "_function-get-startmenu.log"
+    $LogOutputpath =  "$PSScriptRoot\logging\logs\function-get-startmenu.log"
 
     # ---------------- Getting OS Informations ----------------
-    $os = Get-WmiObject -Class Win32_OperatingSystem
-    # Extract build number and caption version text
-    $build = [int]$os.BuildNumber
-    $caption = $os.Caption
-    # Windows 10 was initially released with build 10240
-    $minBuildForWin10 = 10240
-    # Windows 11 starts from build 22000 (approx)
-    $minBuildForWin11 = 22000
-
+    $WinVersion = Get-WinVersion -LogOutputpath $LogOutputpath
     # ---------------- Start Implement ----------------
-    if ($build -ge $minBuildForWin10 -and $build -lt $minBuildForWin11) {
+    if ($WinVersion -eq "Windows 10") {
     # Windows 10
             Write-Host "Running Script with Windows Version $caption, Build $build"
             Write-Log -Message "Running Script with Windows Version $caption, Build $build" -File $LogOutputpath
-            Export-Startlayout -Path ".\Startmenu\layoutModification.xml"
-    } else {
-    # Windows Version not supported
+            if (Test-Path -Path "$PSScriptroot\Startmenu") {
+                Write-Host "Startmenu Folder found in $PSScriptroot\Startmenu"
+                Write-Log -Message "Startmenu Folder found in $PSScriptroot\Startmenu" -File $LogOutputpath
+            } else {
+                Write-Host "Startmenu Folder not found"
+                Write-Log -Message "Startmenu Folder not found" -File $LogOutputpath
+                New-Item -Path "$PSScriptRoot\" -Name "Startmenu" -ItemType "directory"
+                Write-Host "Startmenu Folder created in $PSScriptRoot"
+                Write-Log -Message "Startmenu Folder created in $PSScriptroot" -File $LogOutputpath
+            }
+            Export-Startlayout -Path "$PSScriptRoot\Startmenu\layoutModification.xml"
+            Write-Host "Startmenu Layout exported to $PSScriptRoot\Startmenu\layoutModification.xml"
+            Write-Log -Message "Startmenu Layout exported to $PSScriptRoot\Startmenu\layoutModification.xml" -File $LogOutputpath
+    } else { # Windows Version not supported
         Write-Host "This script is intended for Windows 10. Your Windows version $caption, Build $build."
     }
     # Stoppt die Protokollierung
     Stop-Transcript
-}
+}# Get-Startmenu, Export the Startmenu Layout
 function Set-Startmenu {
     param (
     )
     # ---------------- Protokollierung ----------------
     $ActualDate = Get-Date -Format "yyyy-MM-dd_HH-mm-ss"
     # Transkript file
-    Start-Transcript -Path ".\$($ActualDate)set-Startmenu-transcript.txt"
+    Start-Transcript -Path "$PSScriptRoot\logging\transcripts\$($ActualDate)set-Startmenu-transcript.txt"
     # Log file
-    $LogOutputpath =  ".\" + "$ActualDate" + "_function-set-startmenu.log"
+    $LogOutputpath =  "$PSScriptRoot\logging\logs\function-set-startmenu.log"
 
     # ---------------- Getting OS Informations ----------------
-    Write-Host "Getting OS Informations"
-    $os = Get-WmiObject -Class Win32_OperatingSystem
-    # Extract build number and caption version text
-    $build = [int]$os.BuildNumber
-    $caption = $os.Caption
-    # Windows 10 was initially released with build 10240
-    $minBuildForWin10 = 10240
-    # Windows 11 starts from build 22000 (approx)
-    $minBuildForWin11 = 22000
+    $WinVersion = Get-WinVersion -LogOutputpath $LogOutputpath
     # ---------------- Start Implement ----------------
-    if ($build -ge $minBuildForWin10 -and $build -lt $minBuildForWin11) {
+    if ($WinVersion -eq "Windows 10") {
         # Windows 10
         Write-Host "Your OS is Windows 10, you can use this script"
         Write-Log -Message "Your OS is Windows 10, you can use this script" -File $LogOutputpath
@@ -328,16 +450,16 @@ function Set-Startmenu {
         Write-Log -Message "Running Script with Windows Version $caption, Build $build" -File $LogOutputpath
 
         # Startmenu Layout
-        Read-Host -Prompt "Do you want to change the set the Startmenu Layout with the file .\Startmenu\LayoutModification.xml? (y/n)"
-        Write-Log -Message "Do you want to change the set the Startmenu Layout with the file .\Startmenu\LayoutModification.xml? (y/n)" -File $LogOutputpath
+        $Confirm = Read-Host -Prompt "Do you want to change the set the Startmenu Layout`n with the file $PSScriptRoot\Startmenu\LayoutModification.xml? (y/n)"
+        Write-Log -Message "Do you want to change the set the Startmenu Layout`n with the file $PSScriptRoot\Startmenu\LayoutModification.xml? (y/n)" -File $LogOutputpath
         if ($Confirm -eq "y") {
             Write-Host "Confirmed"
             Write-Log -Message "Confirmed" -File $LogOutputpath
-            $StartmenuLayoutPath = ".\Startmenu\LayoutModification.xml"
+            $StartmenuLayoutPath = "$PSScriptRoot\Startmenu\LayoutModification.xml"
             $StartmenuLayoutDestinationPath = "$($env:localappdata)\Microsoft\Windows\Shell\"
 
-            Write-Host "Copy .\Startmenu]LayoutModification.xml to %localappdata%\Microsoft\Windows\Shell\"
-            Write-Log -Message "Copy L.\Startmenu\ayoutModification.xml to %localappdata%\Microsoft\Windows\Shell\" -File $LogOutputpath
+            Write-Host "Copy $PSScriptRoot\Startmenu]LayoutModification.xml to %localappdata%\Microsoft\Windows\Shell\"
+            Write-Log -Message "Copy $PSScriptRoot\Startmenu\ayoutModification.xml to %localappdata%\Microsoft\Windows\Shell\" -File $LogOutputpath
             Copy-Item -Path $StartmenuLayoutPath -Destination $StartmenuLayoutDestinationPath
         
             Write-Host "Test StartTileGridRegestryPath"
@@ -361,8 +483,7 @@ function Set-Startmenu {
             Write-Host "Startmenu Layout not changed"
             Write-Log -Message "Startmenu Layout not changed" -File $LogOutputpath
         }
-    } else {
-    # Windows Version not supported
+    } else { # Windows Version not supported
         Write-Host "This script is intended for Windows 10. Your Windows version $caption, Build $build."
         Write-Log -Message "This script is intended for Windows 10. Your Windows version $caption, Build $build." -File $LogOutputpath
         Write-Host "Startmenu Layout not changed"
@@ -370,7 +491,13 @@ function Set-Startmenu {
     }
     #Stoppt die Protokollierung
     Stop-Transcript
-}
+}# Set-Startmenu, Import the Startmenu Layout
+<#function Set-Walpaper {
+    param (
+        OptionalParameters
+    )
+    
+}#>
 function Connect-Drive {
     param (
         [string]$DrivePath,
@@ -382,9 +509,9 @@ function Connect-Drive {
     # ---------------- Protokollierung ----------------
     $ActualDate = Get-Date -Format "yyyy-MM-dd_HH-mm-ss"
     # Transkript file
-    Start-Transcript -Path ".\$($ActalDate)connect-Drive-transcript.txt"
+    Start-Transcript -Path "$PSScriptRoot\logging\transcripts\$($ActualDate)connect-Drive-transcript.txt"
     # Log file
-    $LogOutputpath =  ".\" + "$ActualDate" + "_function-connect-drive.log"
+    $LogOutputpath =  "$PSScriptRoot\logging\logs\function-connect-drive.log"
     # ---------------- Getting current Informations ----------------
     $ConnectedDrives = Get-PSDrive -PSProvider FileSystem
     Write-Host "Your current connected Drives"
@@ -444,8 +571,8 @@ function Connect-Drive {
     # ---------------- Protokollierung ----------------
     # Stoppt die Protokollierung
     Stop-Transcript
-}
-function Set-NetAdapter {
+}# Connect-Drive, Connect a Drive and create a Shortcut
+function Set-NetworkAdapter {
     Param(
         [Parameter(Mandatory = $false, Position = 5, HelpMessage = "Show All Network Adapters")]
         [Switch]$Showall
@@ -453,9 +580,9 @@ function Set-NetAdapter {
     # ---------------- Protokollierung ----------------
     $ActualDate = Get-Date -Format "yyyy-MM-dd_HH-mm-ss"
     # Transkript file
-    Start-Transcript -Path ".\$($ActualDate)_set-netadapter-transcript.txt"
+    Start-Transcript -Path "$PSScriptRoot\logging\transcripts\$($ActualDate)_set-netadapter-transcript.txt"
     # Log file
-    $LogOutputpath =  ".\" + "$ActualDate" + "_function-set-netadapter.log"
+    $LogOutputpath =  "$PSScriptRoot\logging\logs\function-set-netadapter.log"
 
     # Check if PowerShell is running as Administrator
     Write-Host "Check if PowerShell is running as Administrator"
@@ -542,4 +669,4 @@ function Set-NetAdapter {
     }
     # Stoppt die Protokollierung
     Stop-Transcript
-}
+}# Set-NetAdapter, Change the IP and Subnet of a Network Adapter

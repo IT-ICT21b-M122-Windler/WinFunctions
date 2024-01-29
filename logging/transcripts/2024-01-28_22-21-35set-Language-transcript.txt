@@ -1,0 +1,32 @@
+﻿**********************
+nStart der Windows PowerShell-Aufzeichnung
+Startzeit: 20240128222135
+Benutzername: WCILCHPF28WEXT\nilswindler
+RunAs-Benutzer: WCILCHPF28WEXT\nilswindler
+Konfigurationsname: 
+Computer: WCILCHPF28WEXT (Microsoft Windows NT 10.0.19044.0)
+Hostanwendung: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+Prozess-ID: 13736
+PSVersion: 5.1.19041.3930
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.19041.3930
+BuildVersion: 10.0.19041.3930
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+Die Aufzeichnung wurde gestartet. Die Ausgabedatei ist "C:\Users\nilswindler\Desktop\M122-Git\logging\transcripts\2024-01-28_22-21-35set-Language-transcript.txt".
+Your current Language and Format settings
+Region: Schweiz 223
+Regional Format: de-CH
+Display Language:
+Current Language: de-CH
+Current Keyboard: 0807:00000807
+Time Format short: dd.MM.yyyy
+Time Format long: dddd, d. MMMM yyyy
+Decimal Separator: .
+Set the Language on Windows
+PS>TerminatingError(): "Die Pipeline wurde beendet."
+>> TerminatingError(): "Die Pipeline wurde beendet."
+>> TerminatingError(): "Die Pipeline wurde beendet."
